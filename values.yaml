@@ -1,0 +1,61 @@
+# Backend service configuration
+backend:
+  enabled: true
+  image:
+    repository: afgane/rainstone-api
+    tag: latest
+    pullPolicy: Always
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  ingress:
+    enabled: true
+    path: /api
+    hosts:
+      - host: ~
+        paths:
+          - path: "/api"
+      - host: rainstone.cloudve.org
+        paths:
+          - path: "/api"
+      - host: rainstone.useanvil.org
+        paths:
+          - path: "/"
+    protocol: http
+
+# Frontend service configuration
+frontend:
+  enabled: true
+  image:
+    repository: afgane/rainstone-ui
+    tag: latest
+    pullPolicy: Always
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 80
+  ingress:
+    enabled: true
+    path: /
+    hosts:
+      - host: ~
+        paths:
+          - path: "/"
+      - host: rainstone.cloudve.org
+        paths:
+          - path: "/"
+      - host: rainstone.useanvil.org
+        paths:
+          - path: "/"
+    protocol: http
+
+# Global ingress controller settings
+ingress:
+  className: nginx
+  annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-staging"
+  tls:
+    - hosts:
+        - rainstone.cloudve.org
+      secretName: rainstone-tls

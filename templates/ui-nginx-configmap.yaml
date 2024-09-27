@@ -1,0 +1,33 @@
+{{- if .Values.frontend.enabled -}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "rainstone.frontend.fullname" . }}-nginx-conf
+data:
+    default.conf: |
+        upstream backend_server {
+            server {{ include "rainstone.backend.fullname" . }}:8000;
+        }
+
+        server {
+            listen *:80;
+            {{- if join " " .Values.frontend.ingress.hosts }}
+            server_name {{ join " " .Values.frontend.ingress.hosts }};
+            {{- end }}
+            root /usr/share/nginx/html;
+
+            location / {
+                index index.html;
+                try_files $uri $uri/ /index.html =404;
+            }
+            location /assets {
+                expires 30d;
+                add_header Cache-Control "public";
+            }
+            location /api {
+                proxy_pass http://backend_server/api;
+            }
+        }
+{{- end }}
+---

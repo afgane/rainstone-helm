@@ -1,0 +1,17 @@
+{{- if .Values.frontend.enabled -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rainstone.frontend.fullname" . }}
+spec:
+  selector:
+    app: {{ include "rainstone.frontend.fullname" . }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: {{ .Values.frontend.service.port }}
+      type: {{ .Values.frontend.service.type }}
+  type: ClusterIP
+{{- end }}
+---

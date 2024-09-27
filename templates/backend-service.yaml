@@ -1,0 +1,17 @@
+{{- if .Values.backend.enabled -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rainstone.backend.fullname" . }}
+spec:
+  selector:
+    app: {{include "rainstone.backend.fullname" . }}
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: {{ .Values.backend.service.port }}
+      name: http
+  type: {{ .Values.backend.service.type }}
+{{- end }}
+---
