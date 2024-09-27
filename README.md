@@ -1,7 +1,7 @@
 A Helm chart for the Rainstone app - an estimator of cloud costs for
 bioinformatics tools and Galaxy workflows. See the
 [rainstone-ui](https://github.com/afgane/rainstone-ui/) and
-[rainstone-api]((https://github.com/afgane/rainstone-api/) repos for the web UI
+[rainstone-api](https://github.com/afgane/rainstone-api/) repos for the web UI
 and backend API.
 
 ## Chart deployment prerequisites

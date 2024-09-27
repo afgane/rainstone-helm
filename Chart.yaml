@@ -1,5 +1,6 @@
 apiVersion: v2
 name: rainstone
 description: Helm chart for the Rainstone web app
+icon: https://i.imgur.com/1znMZDT.png
 version: 0.1.0
 appVersion: "0.1.0"
