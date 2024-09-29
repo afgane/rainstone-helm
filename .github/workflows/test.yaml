@@ -22,11 +22,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Where are we?
-        run: pwd && ls -l
-
       - name: Helm linting
-        run: helm lint rainstone-helm/
+        run: helm lint
 
   deploy:
     runs-on: ubuntu-latest
@@ -59,12 +56,9 @@ jobs:
       with:
         persist-credentials: false
 
-    - name: Where are we?
-      run: pwd && ls -l
-
     - name: Deploy the Rainstone chart
       run: |
-        helm install rainstone ./rainstone-helm --create-namespace -n rs
+        helm install rainstone . --create-namespace -n rs
 
     - name: Wait for API deployment
       run: |
