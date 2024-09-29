@@ -75,7 +75,7 @@ jobs:
 
     - name: Configure port forwarding
       run: |
-        kubectl port-forward deployment/rainstone -n rs 8080:80 &
+        kubectl port-forward deployment/rainstone-frontend -n rs 8080:80 &
         sleep 5  # Give some time for port forwarding to establish
 
     - name: Check webapp status
