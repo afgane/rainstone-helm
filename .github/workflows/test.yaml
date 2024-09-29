@@ -1,0 +1,90 @@
+name: Linting and deployment test on K3S
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Kubectl
+        run: curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl && kubectl version || true
+
+      - name: Install Helm
+        run: curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Helm linting
+        run: helm lint rainstone-helm/
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+
+    - name: Install K3s & Helm
+      uses: jupyterhub/action-k3s-helm@v4
+      with:
+        k3s-channel: stable
+        metrics-enabled: false
+        traefik-enabled: false
+        helm-version: v3.16.1
+
+    - name: Verify function of k8s, kubectl, and helm
+      run: |
+        echo "kubeconfig: $KUBECONFIG"
+        kubectl version
+        kubectl get pods --all-namespaces
+
+        helm version
+        helm list
+
+    - name: Install NGINX Ingress Controller
+      run: |
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+
+    - name: Clone Rainstone Helm Chart
+      run: |
+        git clone https://github.com/afgane/rainstone-helm.git
+
+    - name: Deploy the Rainstone chart
+      run: |
+        helm install rainstone ./rainstone-helm --create-namespace -n rs
+
+    - name: Wait for API deployment
+      run: |
+        kubectl wait --for=condition=available --timeout=300s -n rs deployment/rainstone-backend
+
+    - name: Wait for UI deployment
+      run: |
+        kubectl wait --for=condition=available --timeout=300s -n rs deployment/rainstone-frontend
+
+    - name: Get pods
+      run: kubectl get pods -n rs
+      if: always()
+
+    - name: Configure port forwarding
+      run: |
+        kubectl port-forward deployment/rainstone -n rs 8080:80 &
+        sleep 5  # Give some time for port forwarding to establish
+
+    - name: Check webapp status
+      run: |
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080)
+        if [ $response = "200" ]; then
+          echo "Webapp is up and running!"
+        else
+          echo "Webapp is not responding with 200 status code. Actual response: $response"
+          exit 1
+        fi
