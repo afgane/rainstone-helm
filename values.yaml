@@ -16,12 +16,12 @@ backend:
       - host: ~
         paths:
           - path: "/api"
-      - host: rainstone.cloudve.org
-        paths:
-          - path: "/api"
-      - host: rainstone.useanvil.org
-        paths:
-          - path: "/"
+      # - host: rainstone.cloudve.org
+      #   paths:
+      #     - path: "/api"
+      # - host: rainstone.useanvil.org
+      #   paths:
+      #     - path: "/api"
     protocol: http
 
 # Frontend service configuration
@@ -42,20 +42,21 @@ frontend:
       - host: ~
         paths:
           - path: "/"
-      - host: rainstone.cloudve.org
-        paths:
-          - path: "/"
-      - host: rainstone.useanvil.org
-        paths:
-          - path: "/"
+      # - host: rainstone.cloudve.org
+      #   paths:
+      #     - path: "/"
+      # - host: rainstone.useanvil.org
+      #   paths:
+      #     - path: "/"
     protocol: http
 
 # Global ingress controller settings
 ingress:
   className: nginx
-  annotations:
-      cert-manager.io/cluster-issuer: "letsencrypt-staging"
-  tls:
-    - hosts:
-        - rainstone.cloudve.org
-      secretName: rainstone-tls
+  # annotations:
+  #     cert-manager.io/cluster-issuer: "letsencrypt-staging"
+  # tls:
+  #   - hosts:
+  #       - rainstone.cloudve.org
+  #       - rainstone.useanvil.org
+  #     secretName: rainstone-tls
