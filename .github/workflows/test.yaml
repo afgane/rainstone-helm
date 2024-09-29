@@ -22,16 +22,15 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Where are we?
+        run: pwd && ls -l
+
       - name: Helm linting
         run: helm lint rainstone-helm/
 
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        persist-credentials: false
 
     - name: Install K3s & Helm
       uses: jupyterhub/action-k3s-helm@v4
@@ -52,11 +51,16 @@ jobs:
 
     - name: Install NGINX Ingress Controller
       run: |
-        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml &
+        sleep 5  # Give some time for the Ingress Controller to start
 
-    - name: Clone Rainstone Helm Chart
-      run: |
-        git clone https://github.com/afgane/rainstone-helm.git
+    - name: Checkout chart repo
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+
+    - name: Where are we?
+      run: pwd && ls -l
 
     - name: Deploy the Rainstone chart
       run: |
