@@ -11,7 +11,6 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: {{ .Values.frontend.service.port }}
-      type: {{ .Values.frontend.service.type }}
-  type: ClusterIP
+  type: {{ .Values.frontend.service.type }}
 {{- end }}
 ---
