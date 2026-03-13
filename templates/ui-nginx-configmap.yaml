@@ -1,4 +1,6 @@
 {{- if .Values.frontend.enabled -}}
+{{- $basePath := (trimSuffix "/" (.Values.frontend.basePath | default "/")) | default "/" -}}
+{{- $apiPath := printf "%s/api" (trimSuffix "/" $basePath) | replace "//" "/" -}}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -12,11 +14,10 @@ data:
 
         server {
             listen *:80;
-            {{- if join " " .Values.frontend.ingress.hosts }}
-            server_name {{ join " " .Values.frontend.ingress.hosts }};
-            {{- end }}
+            server_name _;
             root /usr/share/nginx/html;
 
+            {{- if eq $basePath "/" }}
             location / {
                 index index.html;
                 try_files $uri $uri/ /index.html =404;
@@ -28,6 +29,22 @@ data:
             location /api {
                 proxy_pass http://backend_server/api;
             }
+            {{- else }}
+            location = {{ $basePath }} {
+                return 301 {{ $basePath }}/;
+            }
+
+            location ^~ {{ $apiPath }} {
+                rewrite ^{{ $apiPath }}(/.*)?$ /api$1 break;
+                proxy_pass http://backend_server;
+            }
+
+            location ^~ {{ $basePath }}/ {
+                rewrite ^{{ $basePath }}(/.*)?$ $1 break;
+                index index.html;
+                try_files $uri $uri/ /index.html =404;
+            }
+            {{- end }}
         }
 {{- end }}
 ---

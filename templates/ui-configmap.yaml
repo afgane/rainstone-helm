@@ -1,9 +1,12 @@
+{{- $basePath := (trimSuffix "/" (.Values.frontend.basePath | default "/")) | default "/" -}}
+{{- $apiSubPath := printf "%s/api" (trimSuffix "/" $basePath) | replace "//" "/" -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ui-config
+  name: {{ include "rainstone.frontend.fullname" . }}-config
 data:
   config.js: |
     window.APP_CONFIG = {
-      API_SUBPATH: '/api',
+      API_SUBPATH: '{{ $apiSubPath }}',
+      BASE_URL: '{{ $basePath }}',
     };

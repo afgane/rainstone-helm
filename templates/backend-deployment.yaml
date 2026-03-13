@@ -18,6 +18,9 @@ spec:
         - name: backend
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          env:
+            - name: API_ROOT_PATH
+              value: {{ (printf "%s/api" (trimSuffix "/" (.Values.frontend.basePath | default "/"))) | replace "//" "/" | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.backend.service.port }}

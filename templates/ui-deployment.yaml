@@ -30,7 +30,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: ui-config
+            name: {{ include "rainstone.frontend.fullname" . }}-config
         - name: nginx-config
           configMap:
             name: {{ include "rainstone.frontend.fullname" . }}-nginx-conf

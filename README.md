@@ -15,12 +15,46 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main
 ## Installing the chart
 
 Take a look at the `values.yaml` file to see the available configuration
-options. Will probably need to set hostnames.
+options. Will probably need to set hostnames or a path prefix.
 
 Install the chart with:
 
 ```
-helm install rainstone ./rainstone-helm
+helm install rainstone .
+```
+
+### Serving the UI from a path prefix
+
+The chart supports serving the UI from a non-root path via
+`frontend.basePath`. For example, to serve the app from `/rainstone/`, the
+backend will automatically be reached through `/rainstone/api`.
+
+Example override values to use a path prefix:
+
+```yaml
+frontend:
+  basePath: /rainstone
+```
+
+Install or upgrade with:
+
+```sh
+helm upgrade --install rainstone . \
+  --namespace rainstone \
+  --create-namespace \
+  --set frontend.basePath=/rainstone
+```
+
+The chart will automatically adjust the Ingress paths and inject the correct
+configuration into the UI and API.
+
+Verification:
+
+```sh
+kubectl -n rainstone get all,ingress
+curl http://<public-ip>/<base-path>/
+curl http://<public-ip>/<base-path>/api/
+```
 ```
 
 ### Setting a TLS certificate

@@ -2,15 +2,18 @@
 {{- $apiServicePort := .Values.backend.service.port -}}
 {{- $uiFullName := include "rainstone.frontend.fullname" . -}}
 {{- $uiServicePort := .Values.frontend.service.port -}}
+{{- $basePath := (trimSuffix "/" (.Values.frontend.basePath | default "/")) | default "/" -}}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: rainstone-ingress
+  {{- if .Values.ingress.annotations }}
   annotations:
     {{- range $key, $value := .Values.ingress.annotations }}
     {{ $key }}: {{ $value | quote }}
     {{- end }}
+  {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- if .Values.ingress.tls }}
@@ -26,11 +29,14 @@ spec:
   rules:
     {{- if .Values.backend.ingress.enabled }}
     {{- range .Values.backend.ingress.hosts }}
-    - host: {{ .host | quote }}
-      http:
+    - http:
         paths:
           {{- range .paths }}
-          - path: {{ .path }}
+          {{- $path := .path }}
+          {{- if and (eq $path "/api") (not (eq $basePath "/")) }}
+          {{- $path = printf "%s/api" (trimSuffix "/" $basePath) | replace "//" "/" }}
+          {{- end }}
+          - path: {{ $path }}
             pathType: Prefix
             backend:
               service:
@@ -38,15 +44,21 @@ spec:
                 port:
                   number: {{ $apiServicePort }}
           {{- end }}
+      {{- if .host }}
+      host: {{ .host | quote }}
+      {{- end }}
     {{- end }}
     {{- end }}
     {{- if .Values.frontend.ingress.enabled }}
     {{- range .Values.frontend.ingress.hosts }}
-    - host: {{ .host | quote }}
-      http:
+    - http:
         paths:
           {{- range .paths }}
-          - path: {{ .path }}
+          {{- $path := .path }}
+          {{- if and (eq $path "/") (not (eq $basePath "/")) }}
+          {{- $path = $basePath }}
+          {{- end }}
+          - path: {{ $path }}
             pathType: Prefix
             backend:
               service:
@@ -54,6 +66,9 @@ spec:
                 port:
                   number: {{ $uiServicePort }}
           {{- end }}
+      {{- if .host }}
+      host: {{ .host | quote }}
+      {{- end }}
     {{- end }}
     {{- end }}
 ---
