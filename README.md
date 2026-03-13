@@ -55,7 +55,6 @@ kubectl -n rainstone get all,ingress
 curl http://<public-ip>/<base-path>/
 curl http://<public-ip>/<base-path>/api/
 ```
-```
 
 ### Setting a TLS certificate
 
@@ -88,12 +87,36 @@ kubectl describe clusterissuer letsencrypt-prod
 ```
 
 Next we need to update the `values.yaml` file to include the issuer name and
-request the TLS certificate. To start, we'll test with the staging issuer. Set
-`ingress.annotations` to: `cert-manager.io/cluster-issuer:
-"letsencrypt-staging"`, set hosts, and tls entries. Then update the chart with:
+request the TLS certificate. Make sure the ingress hosts and `ingress.tls`
+entries exactly match the DNS names you want on the certificate. To start,
+we'll test with the staging issuer. Set `ingress.annotations` to:
+`cert-manager.io/cluster-issuer: "letsencrypt-staging"`, set hosts, and tls
+entries. Then update the chart with:
 
 ```sh
-helm upgrade -f values.yaml rainstone ./rainstone-helm
+helm upgrade --install rainstone . \
+  --namespace rainstone \
+  --create-namespace \
+  -f values.yaml
+```
+
+If the certificate stays pending and the HTTP-01 challenge is getting the app
+page or an HTTPS redirect instead of the solver token, disable nginx redirect
+on the application ingress during issuance by adding:
+
+```yaml
+ingress:
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+```
+
+Once the certificate is issued, verify both the certificate and the ingress:
+
+```sh
+kubectl -n rainstone get ingress,certificate,certificaterequest,challenge,order
+curl -I https://rainstone.cloudve.org/
+curl -I https://rainstone.anvilproject.org/
 ```
 
 Check that the certificate was issued:
